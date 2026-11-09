@@ -1,0 +1,608 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sistema de Metas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: janelas translúcidas azuis do Sistema (Solo Leveling), cabeçalho de status fixo, abas de módulo, tudo em painéis com cantos cortados. */
+:root{
+  --bg:#050a1a;
+  --bg2:#08122b;
+  --panel:rgba(10,24,58,.72);
+  --line:#2f7bff;
+  --line-soft:rgba(47,123,255,.35);
+  --glow:rgba(47,123,255,.45);
+  --fg:#d9e8ff;
+  --muted:#7f9bc9;
+  --accent:#5cc8ff;
+  --ok:#3be3a5;
+  --warn:#ffcf4d;
+  --bad:#ff5c7a;
+  --purple:#9a6bff;
+  --f-display:'Orbitron','Rajdhani',system-ui,sans-serif;
+  --f-body:'Rajdhani','Segoe UI',system-ui,sans-serif;
+  --f-mono:'Share Tech Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#e9f0ff;--bg2:#dbe7ff;--panel:rgba(255,255,255,.82);--line:#1f5fd6;--line-soft:rgba(31,95,214,.35);
+    --glow:rgba(31,95,214,.25);--fg:#0c1b3d;--muted:#4a5f89;--accent:#0a74c9;--ok:#0a9a6b;--warn:#a87400;--bad:#d1304f;--purple:#6a3fd6;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#e9f0ff;--bg2:#dbe7ff;--panel:rgba(255,255,255,.82);--line:#1f5fd6;--line-soft:rgba(31,95,214,.35);
+  --glow:rgba(31,95,214,.25);--fg:#0c1b3d;--muted:#4a5f89;--accent:#0a74c9;--ok:#0a9a6b;--warn:#a87400;--bad:#d1304f;--purple:#6a3fd6;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:18px 60px;
+  background-image:radial-gradient(1200px 600px at 50% -10%,var(--bg2),transparent 70%),
+    linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);
+  background-size:auto,48px 48px,48px 48px;background-attachment:fixed;
+}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+h1,h2,h3{font-family:var(--f-display);margin:0;letter-spacing:.08em;text-transform:uppercase;text-wrap:balance}
+.win{
+  position:relative;background:var(--panel);border:1px solid var(--line);
+  box-shadow:0 0 18px var(--glow),inset 0 0 22px rgba(47,123,255,.08);
+  clip-path:polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px));
+  padding:14px 16px;min-width:0;
+}
+.win-t{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.win-t::before{content:"";width:8px;height:8px;background:var(--accent);box-shadow:0 0 8px var(--accent);transform:rotate(45deg)}
+.win-t .sp{flex:1;height:1px;background:var(--line-soft)}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{
+  background:transparent;border:1px solid var(--line);color:var(--accent);padding:8px 14px;
+  font-family:var(--f-display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  clip-path:polygon(0 6px,6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%);
+  transition:background .15s,box-shadow .15s;
+}
+.btn:hover{background:rgba(47,123,255,.18);box-shadow:0 0 12px var(--glow)}
+.btn.pri{background:var(--line);color:#fff}
+.btn.sm{padding:5px 9px;font-size:10px}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+input,select,textarea{
+  background:rgba(5,12,30,.55);color:var(--fg);border:1px solid var(--line-soft);padding:8px 10px;font:inherit;min-width:0;width:100%;
+}
+:root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:rgba(255,255,255,.8)}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) input,:root:not([data-theme="dark"]) select,:root:not([data-theme="dark"]) textarea{background:rgba(255,255,255,.8)}}
+label{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;display:flex;flex-direction:column;gap:4px;min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>*{flex:1 1 140px;min-width:0}
+.row>.fit{flex:0 0 auto}
+
+/* Cabeçalho de status */
+.status{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.lvl{
+  width:92px;height:92px;display:grid;place-items:center;text-align:center;border:1px solid var(--accent);
+  box-shadow:0 0 22px var(--glow),inset 0 0 18px var(--glow);
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+}
+.lvl small{display:block;font-family:var(--f-display);font-size:9px;letter-spacing:.2em;color:var(--muted)}
+.lvl b{font-family:var(--f-display);font-size:34px;color:var(--accent);text-shadow:0 0 12px var(--accent);line-height:1}
+.who{display:flex;flex-direction:column;gap:6px;min-width:0}
+.who .name{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.who h1{font-size:18px}
+.rank{font-family:var(--f-display);font-size:12px;letter-spacing:.2em;color:var(--warn)}
+.bar{height:12px;background:rgba(47,123,255,.15);border:1px solid var(--line-soft);position:relative;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--line),var(--accent));box-shadow:0 0 12px var(--accent);transition:width .5s}
+.bar.ok>i{background:linear-gradient(90deg,#0aa36d,var(--ok));box-shadow:0 0 10px var(--ok)}
+.bar.pu>i{background:linear-gradient(90deg,#6a3fd6,var(--purple));box-shadow:0 0 10px var(--purple)}
+.bar.wa>i{background:linear-gradient(90deg,#c98a00,var(--warn));box-shadow:0 0 10px var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{padding:8px 10px;border:1px solid var(--line-soft);background:rgba(47,123,255,.06);min-width:0}
+.stat .k{display:flex;justify-content:space-between;font-family:var(--f-display);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--f-mono);font-size:22px;color:var(--fg)}
+.stat .bar{height:6px;margin-top:4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--f-mono);font-size:13px;border:1px solid var(--line-soft);padding:3px 9px;color:var(--muted)}
+.chip b{color:var(--fg);font-weight:400}
+
+/* Abas */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.tab{flex:0 0 auto;background:transparent;border:1px solid var(--line-soft);padding:9px 14px;font-family:var(--f-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  clip-path:polygon(0 7px,7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.tab[aria-selected="true"]{background:rgba(47,123,255,.22);border-color:var(--accent);color:var(--accent);box-shadow:0 0 14px var(--glow)}
+
+/* Metas */
+.quest{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line-soft)}
+.quest:first-child{border-top:0}
+.chk{width:28px;height:28px;border:1px solid var(--accent);background:transparent;display:grid;place-items:center;color:transparent;font-size:18px;
+  clip-path:polygon(0 5px,5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%)}
+.quest.done .chk{background:var(--ok);border-color:var(--ok);color:#03160f}
+.quest.done .qt{text-decoration:line-through;color:var(--muted)}
+.qt{font-size:17px;font-weight:600;overflow-wrap:anywhere}
+.qm{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.tag{font-family:var(--f-mono);font-size:12px;padding:1px 7px;border:1px solid var(--line-soft)}
+.tag.f{color:var(--bad);border-color:var(--bad)}
+.tag.m{color:var(--accent);border-color:var(--accent)}
+.tag.e{color:var(--purple);border-color:var(--purple)}
+.tag.xp{color:var(--warn);border-color:var(--warn)}
+.empty{padding:18px 8px;text-align:center;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+
+/* Recompensas, bíblia, estudo */
+.reward{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line-soft)}
+.reward:first-child{border-top:0}
+.reward .rn{font-weight:600;overflow-wrap:anywhere}
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.book{border:1px solid var(--line-soft);background:rgba(47,123,255,.05);padding:6px 8px;text-align:left;min-width:0}
+.book .bn{font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.book .bp{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:5px;margin-top:10px}
+.ch{border:1px solid var(--line-soft);background:transparent;padding:6px 0;font-family:var(--f-mono);font-size:13px;text-align:center}
+.ch.on{background:var(--ok);border-color:var(--ok);color:#03160f}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-family:var(--f-display);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.timer{font-family:var(--f-mono);font-size:46px;color:var(--accent);text-shadow:0 0 14px var(--accent);text-align:center}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;
+  background:var(--bg2);border:1px solid var(--accent);box-shadow:0 0 22px var(--glow);padding:12px 18px;font-family:var(--f-display);font-size:12px;letter-spacing:.14em;max-width:calc(100vw - 32px);text-align:center}
+.toast.up{border-color:var(--warn);box-shadow:0 0 30px rgba(255,207,77,.5);color:var(--warn);font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+.sync{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+a{color:var(--accent)}
+@media (max-width:520px){
+  .status{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .who{width:100%}
+  .who .name{justify-content:center}
+  .stat .v{font-size:18px}
+  .quest{grid-template-columns:auto 1fr}
+  .quest .acts{grid-column:1 / -1;display:flex;gap:8px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap" id="app">
+  <div class="win" id="status-win" aria-live="polite"></div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="view"></div>
+  <div class="sync" id="sync"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ====== DADOS FIXOS ====== */
+var BIBLIA=[
+["Gênesis",50],["Êxodo",40],["Levítico",27],["Números",36],["Deuteronômio",34],["Josué",24],["Juízes",21],["Rute",4],
+["1 Samuel",31],["2 Samuel",24],["1 Reis",22],["2 Reis",25],["1 Crônicas",29],["2 Crônicas",36],["Esdras",10],["Neemias",13],
+["Ester",10],["Jó",42],["Salmos",150],["Provérbios",31],["Eclesiastes",12],["Cantares",8],["Isaías",66],["Jeremias",52],
+["Lamentações",5],["Ezequiel",48],["Daniel",12],["Oseias",14],["Joel",3],["Amós",9],["Obadias",1],["Jonas",4],["Miqueias",7],
+["Naum",3],["Habacuque",3],["Sofonias",3],["Ageu",2],["Zacarias",14],["Malaquias",4],
+["Mateus",28],["Marcos",16],["Lucas",24],["João",21],["Atos",28],["Romanos",16],["1 Coríntios",16],["2 Coríntios",13],
+["Gálatas",6],["Efésios",6],["Filipenses",4],["Colossenses",4],["1 Tessalonicenses",5],["2 Tessalonicenses",3],["1 Timóteo",6],
+["2 Timóteo",4],["Tito",3],["Filemom",1],["Hebreus",13],["Tiago",5],["1 Pedro",5],["2 Pedro",3],["1 João",5],["2 João",1],
+["3 João",1],["Judas",1],["Apocalipse",22]
+];
+var AT_FIM=39;
+var ATRIB={f:{n:"Físico",c:"f"},m:{n:"Mental",c:"m"},e:{n:"Espírito",c:"e"}};
+var RANKS=[[1,"Rank E"],[10,"Rank D"],[20,"Rank C"],[35,"Rank B"],[50,"Rank A"],[75,"Rank S"],[100,"Monarca"]];
+var EXAMES=["ENEM","UECE","UFC","UVA","UNIFOR","SISU","Outro"];
+var MATERIAS=["Matemática","Português","Redação","Literatura","Física","Química","Biologia","História","Geografia","Filosofia","Sociologia","Inglês","Espanhol"];
+var SUGESTOES=[
+ {t:"Treino físico de 30 minutos",a:"f"},{t:"Beber 2 litros de água",a:"f"},{t:"Dormir antes das 23h",a:"f"},
+ {t:"Resolver 10 questões de prova antiga",a:"m"},{t:"Ler 20 páginas de um livro",a:"m"},{t:"Revisar o caderno de erros",a:"m"},
+ {t:"Ler 1 capítulo da Bíblia",a:"e"},{t:"Orar por 10 minutos",a:"e"},{t:"Escrever 3 gratidões do dia",a:"e"}
+];
+
+/* ====== ESTADO ====== */
+function novoEstado(){
+  return {v:1,xp:0,nome:"Caçador",
+    metas:[],           // {id,t,a,xp,rec}
+    feitos:{},          // {"AAAA-MM-DD":[idMeta,...]}
+    recompensas:[],     // {id,n,custo,resgatadas}
+    moedas:0,
+    livros:[],          // {id,t,pag,lidas,meta}
+    leituraLog:{},      // {data:paginas}
+    biblia:{lidos:{}},  // {"0":[1,2,3]} indice do livro -> capitulos
+    diario:[],          // {d,ref,t}
+    caderno:[],         // {id,d,exame,ano,mat,tema,ok,motivo,rev,prox}
+    estudoMin:{},       // {data:minutos}
+    sessoes:0
+  };
+}
+var S=novoEstado();
+var aba="hoje";
+var salvando=false,sujo=false,docRef=null,dbOk=false;
+
+/* ====== UTIL ====== */
+function $(s,r){return (r||document).querySelector(s)}
+function hoje(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDias(iso,n){var p=iso.split("-");var d=new Date(+p[0],+p[1]-1,+p[2]);d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function fmt(iso){var p=iso.split("-");return p[2]+"/"+p[1]}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function xpPara(n){return Math.round(100*Math.pow(n,1.5))}          // XP total p/ chegar ao nível n+1
+function nivel(xp){var n=1;while(xp>=xpPara(n)){xp-=xpPara(n);n++}return {n:n,atual:xp,falta:xpPara(n)}}
+function rankDe(n){var r=RANKS[0][1];RANKS.forEach(function(x){if(n>=x[0])r=x[1]});return r}
+function totalXpAteNivel(n){var t=0;for(var i=1;i<n;i++)t+=xpPara(i);return t}
+
+/* ====== PERSISTÊNCIA ====== */
+var LS="sistema-metas-v1";
+function lsLer(){try{var r=localStorage.getItem(LS);return r?JSON.parse(r):null}catch(e){return null}}
+function lsGravar(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+function marcaSync(txt){$("#sync").textContent=txt}
+function salvar(){
+  lsGravar();
+  if(!docRef){marcaSync("Salvo neste navegador");return}
+  sujo=true;
+  if(salvando)return;
+  (function loop(){
+    if(!sujo){salvando=false;marcaSync("Salvo na sua conta");return}
+    salvando=true;sujo=false;
+    docRef.set(JSON.parse(JSON.stringify(S))).then(function(){loop()},function(){
+      salvando=false;marcaSync("Salvo neste navegador (conta indisponível)")
+    });
+  })();
+}
+function iniciarDados(){
+  var local=lsLer();
+  if(local)S=Object.assign(novoEstado(),local);
+  render();
+  if(!window.claude||!window.claude.use){marcaSync("Salvo neste navegador");return}
+  Promise.all([window.claude.use("db"),window.claude.use("user")]).then(function(r){
+    var db=r[0],user=r[1];
+    if(!db||!user){marcaSync("Salvo neste navegador");return}
+    return user.id().then(function(id){
+      if(!id){marcaSync("Salvo neste navegador");return}
+      docRef=db.doc("data/users/"+id+"/sistema");
+      return docRef.get().then(function(snap){
+        if(snap.exists){
+          var remoto=snap.data();
+          var l=lsLer();
+          if(!l||(remoto.xp||0)>=(l.xp||0)){S=Object.assign(novoEstado(),JSON.parse(JSON.stringify(remoto)))}
+          else{S=Object.assign(novoEstado(),l)}
+        }
+        dbOk=true;lsGravar();render();salvar();
+      });
+    });
+  }).catch(function(){marcaSync("Salvo neste navegador")});
+}
+
+/* ====== XP / RECOMPENSAS ====== */
+var toastT=null;
+function toast(msg,up){var t=$("#toast");t.textContent=msg;t.className="toast"+(up?" up":"");t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},up?3600:2200)}
+function ganhar(xp,coins,motivo){
+  var antes=nivel(S.xp).n;
+  S.xp=Math.max(0,S.xp+xp);
+  S.moedas=Math.max(0,S.moedas+(coins==null?Math.round(xp/2):coins));
+  var depois=nivel(S.xp).n;
+  if(depois>antes)toast("[ NÍVEL AUMENTOU ]  NÍVEL "+depois+" · "+rankDe(depois),true);
+  else if(xp>0)toast("+"+xp+" XP  ·  "+motivo);
+}
+function atributos(){
+  var t={f:0,m:0,e:0};
+  Object.keys(S.feitos).forEach(function(d){S.feitos[d].forEach(function(id){var m=S.metas.filter(function(x){return x.id===id})[0];if(m)t[m.a]+=m.xp})});
+  Object.keys(S.leituraLog).forEach(function(d){t.m+=S.leituraLog[d]*2});
+  Object.keys(S.biblia.lidos).forEach(function(k){t.e+=S.biblia.lidos[k].length*15});
+  S.diario.forEach(function(){t.e+=10});
+  S.caderno.forEach(function(){t.m+=10});
+  return t;
+}
+function sequencia(){
+  // dias seguidos (terminando hoje ou ontem) com pelo menos uma meta concluída
+  var d=hoje(),n=0;
+  if(!(S.feitos[d]&&S.feitos[d].length))d=addDias(d,-1);
+  while(S.feitos[d]&&S.feitos[d].length){n++;d=addDias(d,-1)}
+  return n;
+}
+
+/* ====== RENDER: STATUS ====== */
+function renderStatus(){
+  var L=nivel(S.xp),a=atributos();
+  var pct=Math.min(100,Math.round(L.atual/L.falta*100));
+  var mx=Math.max(50,a.f,a.m,a.e);
+  var h='<div class="status"><div class="lvl"><div><small>NÍVEL</small><b>'+L.n+'</b></div></div>'
+   +'<div class="who"><div class="name"><h1>'+esc(S.nome)+'</h1><span class="rank">'+rankDe(L.n)+'</span></div>'
+   +'<div class="bar"><i style="width:'+pct+'%"></i></div>'
+   +'<div class="chips"><span class="chip">XP <b>'+L.atual+' / '+L.falta+'</b></span><span class="chip">Moedas <b>'+S.moedas+'</b></span><span class="chip">Sequência <b>'+sequencia()+' dias</b></span></div></div></div>'
+   +'<div class="stats" style="margin-top:12px">'
+   +statBox("Físico",a.f,mx,"")+statBox("Mental",a.m,mx,"pu")+statBox("Espírito",a.e,mx,"wa")+'</div>';
+  $("#status-win").innerHTML='<div class="win-t">Janela de Status<span class="sp"></span></div>'+h;
+}
+function statBox(n,v,mx,cls){return '<div class="stat"><div class="k"><span>'+n+'</span></div><div class="v">'+v+'</div><div class="bar '+cls+'"><i style="width:'+Math.round(v/mx*100)+'%"></i></div></div>'}
+
+/* ====== RENDER: ABAS ====== */
+var ABAS=[["hoje","Missões"],["recomp","Recompensas"],["leitura","Leitura"],["biblia","Bíblia"],["estudo","Vestibular"],["stats","Progresso"]];
+function renderTabs(){
+  $("#tabs").innerHTML=ABAS.map(function(a){return '<button class="tab" role="tab" data-aba="'+a[0]+'" aria-selected="'+(aba===a[0])+'">'+a[1]+'</button>'}).join("");
+}
+
+/* ====== ABA: MISSÕES ====== */
+function viewHoje(){
+  var d=hoje(),feitas=S.feitos[d]||[];
+  var lista=S.metas.map(function(m){
+    var ok=feitas.indexOf(m.id)>-1;
+    return '<div class="quest'+(ok?" done":"")+'"><button class="chk" data-act="toggle" data-id="'+m.id+'" aria-label="Marcar como feito: '+esc(m.t)+'" aria-pressed="'+ok+'">✓</button>'
+      +'<div><div class="qt">'+esc(m.t)+'</div><div class="qm"><span class="tag '+m.a+'">'+ATRIB[m.a].n+'</span><span class="tag xp">+'+m.xp+' XP</span>'+(m.rec?'<span class="tag">diária</span>':'<span class="tag">só hoje</span>')+'</div></div>'
+      +'<div class="acts"><button class="btn sm danger" data-act="delmeta" data-id="'+m.id+'" aria-label="Remover meta">Remover</button></div></div>';
+  }).join("");
+  var tot=S.metas.length,fe=S.metas.filter(function(m){return feitas.indexOf(m.id)>-1}).length;
+  var sug=SUGESTOES.filter(function(s){return !S.metas.some(function(m){return m.t===s.t})}).map(function(s,i){
+    return '<button class="btn sm" data-act="sug" data-i="'+SUGESTOES.indexOf(s)+'">+ '+esc(s.t)+'</button>'}).join(" ");
+  return '<div class="win"><div class="win-t">Missão Diária · '+fmt(d)+'<span class="sp"></span><span class="mono">'+fe+'/'+tot+'</span></div>'
+   +(tot?'<div class="bar ok" style="margin-bottom:6px"><i style="width:'+Math.round(fe/tot*100)+'%"></i></div>':'')
+   +(lista||'<div class="empty">Nenhuma missão ativa. Adicione a primeira meta abaixo.</div>')
+   +(tot&&fe===tot?'<div class="note" style="margin-top:8px;color:var(--ok)">[ MISSÃO DIÁRIA CONCLUÍDA ] Bônus já aplicado.</div>':'')
+   +'</div>'
+   +'<div class="win"><div class="win-t">Nova Meta<span class="sp"></span></div>'
+   +'<form id="f-meta"><div class="row"><label style="flex:2 1 220px">Descrição<input id="m-t" maxlength="80" required placeholder="Ex.: correr 3 km"></label>'
+   +'<label>Atributo<select id="m-a"><option value="f">Físico</option><option value="m">Mental</option><option value="e">Espírito</option></select></label>'
+   +'<label>Dificuldade<select id="m-x"><option value="10">Fácil · 10 XP</option><option value="25" selected>Média · 25 XP</option><option value="50">Difícil · 50 XP</option><option value="100">Épica · 100 XP</option></select></label>'
+   +'<label>Repetição<select id="m-r"><option value="1">Todo dia</option><option value="0">Só hoje</option></select></label>'
+   +'<button class="btn pri fit" type="submit">Adicionar</button></div></form>'
+   +'<div style="margin-top:12px"><div class="note" style="margin-bottom:6px">Sugestões para treinar corpo, mente e espírito:</div><div class="chips">'+(sug||'<span class="note">Todas as sugestões já foram adicionadas.</span>')+'</div></div></div>';
+}
+function bonusDia(){
+  var d=hoje(),f=S.feitos[d]||[];
+  if(S.metas.length&&f.length===S.metas.length){ganhar(30,15,"Bônus: missão diária completa")}
+}
+function toggleMeta(id){
+  var d=hoje();S.feitos[d]=S.feitos[d]||[];
+  var i=S.feitos[d].indexOf(id),m=S.metas.filter(function(x){return x.id===id})[0];
+  if(!m)return;
+  if(i>-1){S.feitos[d].splice(i,1);ganhar(-m.xp,-Math.round(m.xp/2),"Desfeito")}
+  else{S.feitos[d].push(id);ganhar(m.xp,null,m.t);bonusDia()}
+  salvar();render();
+}
+function novaMeta(t,a,xp,rec){S.metas.push({id:uid(),t:t,a:a,xp:xp,rec:rec});salvar();render()}
+function limparMetasAntigas(){
+  // metas "só hoje" de dias anteriores saem da lista
+  var d=hoje();
+  if(S.ultimoDia&&S.ultimoDia!==d){
+    S.metas=S.metas.filter(function(m){return m.rec||(m.criada===undefined)||m.criada===d});
+  }
+  S.ultimoDia=d;
+}
+
+/* ====== ABA: RECOMPENSAS ====== */
+function viewRecomp(){
+  var l=S.recompensas.map(function(r){
+    var pode=S.moedas>=r.custo;
+    return '<div class="reward"><div><div class="rn">'+esc(r.n)+'</div><div class="note mono">'+r.custo+' moedas · resgatada '+r.resgatadas+'x</div></div>'
+     +'<div style="display:flex;gap:6px"><button class="btn sm'+(pode?' pri':'')+'" data-act="resgatar" data-id="'+r.id+'"'+(pode?'':' disabled style="opacity:.45;cursor:not-allowed"')+'>Resgatar</button>'
+     +'<button class="btn sm danger" data-act="delrec" data-id="'+r.id+'" aria-label="Remover recompensa">×</button></div></div>';
+  }).join("");
+  return '<div class="win"><div class="win-t">Loja de Recompensas<span class="sp"></span><span class="mono">'+S.moedas+' moedas</span></div>'
+   +(l||'<div class="empty">Crie recompensas reais para você mesmo: um lanche, um episódio, uma saída. Cada meta concluída rende moedas.</div>')+'</div>'
+   +'<div class="win"><div class="win-t">Nova Recompensa<span class="sp"></span></div><form id="f-rec"><div class="row">'
+   +'<label style="flex:2 1 220px">Recompensa<input id="r-n" maxlength="60" required placeholder="Ex.: 1 episódio de anime"></label>'
+   +'<label>Custo (moedas)<input id="r-c" type="number" min="1" max="9999" value="40" required></label>'
+   +'<button class="btn pri fit" type="submit">Criar</button></div></form>'
+   +'<p class="note" style="margin:10px 0 0">Você ganha moedas igual à metade do XP de cada meta, leitura de páginas e capítulos da Bíblia.</p></div>';
+}
+
+/* ====== ABA: LEITURA ====== */
+function viewLeitura(){
+  var d=hoje(),pg=S.leituraLog[d]||0;
+  var l=S.livros.map(function(b){
+    var p=b.pag?Math.min(100,Math.round(b.lidas/b.pag*100)):0,fim=b.pag&&b.lidas>=b.pag;
+    return '<div class="reward" style="align-items:flex-start;flex-wrap:wrap"><div style="flex:1 1 200px;min-width:0"><div class="rn">'+esc(b.t)+(fim?' <span class="tag xp">concluído</span>':'')+'</div>'
+     +'<div class="bar ok" style="margin:6px 0 4px"><i style="width:'+p+'%"></i></div><div class="note mono">'+b.lidas+' / '+b.pag+' páginas · meta '+b.meta+' p/dia</div></div>'
+     +'<form class="f-pag" data-id="'+b.id+'" style="display:flex;gap:6px;align-items:flex-end"><label style="width:92px">Páginas<input type="number" min="1" max="999" value="'+b.meta+'"></label><button class="btn sm pri" type="submit">Registrar</button>'
+     +'<button class="btn sm danger" type="button" data-act="dellivro" data-id="'+b.id+'" aria-label="Remover livro">×</button></form></div>';
+  }).join("");
+  return '<div class="win"><div class="win-t">Sala de Leitura<span class="sp"></span><span class="mono">hoje: '+pg+' páginas</span></div>'
+   +(l||'<div class="empty">Cadastre o livro que está lendo. Cada página registrada rende 2 XP de Mental.</div>')+'</div>'
+   +'<div class="win"><div class="win-t">Novo Livro<span class="sp"></span></div><form id="f-livro"><div class="row">'
+   +'<label style="flex:2 1 220px">Título<input id="l-t" maxlength="80" required placeholder="Título do livro"></label>'
+   +'<label>Páginas<input id="l-p" type="number" min="1" max="5000" required value="200"></label>'
+   +'<label>Meta por dia<input id="l-m" type="number" min="1" max="500" required value="15"></label>'
+   +'<button class="btn pri fit" type="submit">Adicionar</button></div></form></div>';
+}
+
+/* ====== ABA: BÍBLIA ====== */
+var bSel=-1;
+function totalCaps(){return BIBLIA.reduce(function(s,b){return s+b[1]},0)}
+function capsLidos(){var n=0;Object.keys(S.biblia.lidos).forEach(function(k){n+=S.biblia.lidos[k].length});return n}
+function proxCap(){
+  for(var i=0;i<BIBLIA.length;i++){var l=S.biblia.lidos[i]||[];for(var c=1;c<=BIBLIA[i][1];c++){if(l.indexOf(c)<0)return [i,c]}}
+  return null;
+}
+function buscaUrl(i,c){return "https://www.bibliaonline.com.br/acf/search?q="+encodeURIComponent(BIBLIA[i][0]+" "+c)}
+function viewBiblia(){
+  var tot=totalCaps(),lid=capsLidos(),p=Math.round(lid/tot*100),nx=proxCap();
+  var h='<div class="win"><div class="win-t">Leitura da Bíblia<span class="sp"></span><span class="mono">'+lid+' / '+tot+' capítulos</span></div>'
+   +'<div class="bar wa" style="margin-bottom:10px"><i style="width:'+p+'%"></i></div>';
+  if(nx){
+    h+='<div class="row" style="align-items:center"><div style="flex:2 1 220px"><div class="note">Próximo capítulo do plano</div><div style="font-family:var(--f-display);font-size:20px;color:var(--warn)">'+esc(BIBLIA[nx[0]][0])+' '+nx[1]+'</div></div>'
+     +'<a class="btn fit" href="'+buscaUrl(nx[0],nx[1])+'" target="_blank" rel="noopener" style="text-decoration:none">Abrir texto</a>'
+     +'<button class="btn pri fit" data-act="lido" data-b="'+nx[0]+'" data-c="'+nx[1]+'">Marcar lido · +15 XP</button></div>';
+  }else h+='<div class="empty" style="color:var(--ok)">[ BÍBLIA COMPLETA ] Você leu todos os capítulos.</div>';
+  h+='<p class="note" style="margin:10px 0 0">O texto bíblico abre em um site externo. Aqui você controla o plano, os capítulos lidos e o XP de Espírito.</p></div>';
+  h+='<div class="win"><div class="win-t">Livros<span class="sp"></span></div>'
+   +'<div class="note" style="margin-bottom:6px">Antigo Testamento</div><div class="books">'+BIBLIA.slice(0,AT_FIM).map(livroBtn).join("")+'</div>'
+   +'<div class="note" style="margin:12px 0 6px">Novo Testamento</div><div class="books">'+BIBLIA.slice(AT_FIM).map(function(b,i){return livroBtn(b,i+AT_FIM)}).join("")+'</div>';
+  if(bSel>-1){
+    var l=S.biblia.lidos[bSel]||[],caps=[];
+    for(var c=1;c<=BIBLIA[bSel][1];c++)caps.push('<button class="ch'+(l.indexOf(c)>-1?' on':'')+'" data-act="cap" data-b="'+bSel+'" data-c="'+c+'" aria-pressed="'+(l.indexOf(c)>-1)+'">'+c+'</button>');
+    h+='<div style="margin-top:14px"><div class="win-t" style="margin-bottom:0">'+esc(BIBLIA[bSel][0])+'<span class="sp"></span><span class="mono">'+l.length+'/'+BIBLIA[bSel][1]+'</span></div><div class="chgrid">'+caps.join("")+'</div>'
+     +'<p class="note" style="margin:8px 0 0">Toque em um capítulo para marcar ou desmarcar como lido.</p></div>';
+  }
+  h+='</div>';
+  h+='<div class="win"><div class="win-t">Diário Espiritual<span class="sp"></span></div><form id="f-diario"><div class="row">'
+   +'<label>Referência<input id="d-r" maxlength="40" placeholder="Ex.: Salmos 23"></label>'
+   +'<label style="flex:3 1 260px">O que você aprendeu ou orou hoje<textarea id="d-t" rows="2" maxlength="400" required></textarea></label>'
+   +'<button class="btn pri fit" type="submit">Registrar · +10 XP</button></div></form>'
+   +'<div style="margin-top:10px">'+S.diario.slice().reverse().slice(0,8).map(function(e){
+     return '<div class="reward" style="align-items:flex-start"><div style="min-width:0"><div class="note mono">'+fmt(e.d)+(e.ref?' · '+esc(e.ref):'')+'</div><div style="overflow-wrap:anywhere">'+esc(e.t)+'</div></div></div>'}).join("")+'</div></div>';
+  return h;
+}
+function livroBtn(b,i){
+  if(i===undefined)i=BIBLIA.indexOf(b);
+  var l=(S.biblia.lidos[i]||[]).length;
+  return '<button class="book" data-act="livro" data-b="'+i+'" style="'+(bSel===i?'border-color:var(--accent);background:rgba(47,123,255,.2)':'')+'"><div class="bn">'+esc(b[0])+'</div><div class="bp">'+l+'/'+b[1]+'</div></button>';
+}
+function marcarCap(b,c,forca){
+  var l=S.biblia.lidos[b]=S.biblia.lidos[b]||[],i=l.indexOf(c);
+  if(i>-1&&!forca){l.splice(i,1);ganhar(-15,-8,"Desfeito")}
+  else if(i<0){l.push(c);l.sort(function(x,y){return x-y});ganhar(15,8,BIBLIA[b][0]+" "+c)}
+  salvar();render();
+}
+
+/* ====== ABA: VESTIBULAR (método reverso) ====== */
+var timer={rodando:false,seg:25*60,id:null};
+function viewEstudo(){
+  var d=hoje(),pend=S.caderno.filter(function(q){return q.rev&&q.prox&&q.prox<=d});
+  var erros=S.caderno.filter(function(q){return !q.ok}),porTema={};
+  erros.forEach(function(q){var k=q.mat+" · "+(q.tema||"sem tema");porTema[k]=(porTema[k]||0)+1});
+  var top=Object.keys(porTema).sort(function(a,b){return porTema[b]-porTema[a]}).slice(0,5);
+  var h='<div class="win"><div class="win-t">Método Reverso<span class="sp"></span></div>'
+   +'<div class="grid2"><div><b>1. Resolva primeiro.</b><div class="note">Pegue uma prova antiga do exame que você escolheu e resolva sem estudar antes.</div></div>'
+   +'<div><b>2. Registre cada erro.</b><div class="note">Anote matéria, tema e o motivo do erro no caderno abaixo.</div></div>'
+   +'<div><b>3. Estude só o que errou.</b><div class="note">Os temas mais errados aparecem aqui como prioridade.</div></div>'
+   +'<div><b>4. Revise no tempo certo.</b><div class="note">Cada erro volta em 1, 3, 7 e 15 dias.</div></div></div></div>';
+  h+='<div class="win"><div class="win-t">Provas Antigas<span class="sp"></span></div><div class="row">'
+   +'<label>Exame<select id="p-ex">'+EXAMES.map(function(e){return '<option>'+e+'</option>'}).join("")+'</select></label>'
+   +'<label>Ano<input id="p-an" type="number" min="1990" max="2026" value="2024"></label>'
+   +'<a class="btn pri fit" id="p-go" style="text-decoration:none" target="_blank" rel="noopener" href="'+provaUrl("ENEM",2024)+'">Procurar prova e gabarito</a>'
+   +'<a class="btn fit" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos">Provas oficiais do ENEM</a></div>'
+   +'<p class="note" style="margin:8px 0 0">As provas abrem em sites externos. Depois de resolver, volte e registre o resultado.</p></div>';
+  h+='<div class="grid2"><div class="win"><div class="win-t">Cronômetro de Estudo<span class="sp"></span></div>'
+   +'<div class="timer" id="tm">'+fmtT(timer.seg)+'</div><div class="row" style="justify-content:center;margin-top:8px">'
+   +'<button class="btn pri fit" data-act="tstart">'+(timer.rodando?'Pausar':'Iniciar')+'</button><button class="btn fit" data-act="treset">Reiniciar</button></div>'
+   +'<p class="note" style="text-align:center;margin:8px 0 0">Cada 25 minutos concluídos rendem 30 XP de Mental. Hoje: '+(S.estudoMin[d]||0)+' min.</p></div>'
+   +'<div class="win"><div class="win-t">Temas Prioritários<span class="sp"></span></div>'
+   +(top.length?top.map(function(k){return '<div class="reward"><span>'+esc(k)+'</span><span class="tag f">'+porTema[k]+' erros</span></div>'}).join(""):'<div class="empty">Sem erros registrados ainda.</div>')+'</div></div>';
+  h+='<div class="win"><div class="win-t">Revisões de Hoje<span class="sp"></span><span class="mono">'+pend.length+'</span></div>'
+   +(pend.length?pend.map(function(q){return '<div class="reward"><div style="min-width:0"><div>'+esc(q.mat)+' · '+esc(q.tema||"sem tema")+'</div><div class="note mono">'+esc(q.exame)+' '+q.ano+' · revisão '+(q.passo+1)+'</div></div><button class="btn sm pri" data-act="revisar" data-id="'+q.id+'">Revisei · +10 XP</button></div>'}).join(""):'<div class="empty">Nenhuma revisão pendente.</div>')+'</div>';
+  h+='<div class="win"><div class="win-t">Registrar Questão<span class="sp"></span></div><form id="f-q"><div class="row">'
+   +'<label>Exame<select id="q-ex">'+EXAMES.map(function(e){return '<option>'+e+'</option>'}).join("")+'</select></label>'
+   +'<label>Ano<input id="q-an" type="number" min="1990" max="2026" value="2024"></label>'
+   +'<label>Matéria<select id="q-mat">'+MATERIAS.map(function(e){return '<option>'+e+'</option>'}).join("")+'</select></label>'
+   +'<label>Tema<input id="q-tema" maxlength="60" placeholder="Ex.: Função afim"></label></div>'
+   +'<div class="row" style="margin-top:10px"><label>Resultado<select id="q-ok"><option value="1">Acertei</option><option value="0">Errei</option></select></label>'
+   +'<label style="flex:3 1 240px">Motivo do erro (se errou)<input id="q-m" maxlength="100" placeholder="Ex.: não lembrava a fórmula"></label>'
+   +'<button class="btn pri fit" type="submit">Registrar · +5 XP</button></div></form></div>';
+  h+='<div class="win"><div class="win-t">Caderno de Erros<span class="sp"></span><span class="mono">'+S.caderno.length+' questões</span></div>'
+   +(S.caderno.length?'<div class="tbl"><table><thead><tr><th>Data</th><th>Prova</th><th>Matéria / tema</th><th>Resultado</th><th>Motivo</th><th></th></tr></thead><tbody>'
+    +S.caderno.slice().reverse().slice(0,30).map(function(q){
+      return '<tr><td class="mono">'+fmt(q.d)+'</td><td>'+esc(q.exame)+' '+q.ano+'</td><td>'+esc(q.mat)+(q.tema?' · '+esc(q.tema):'')+'</td><td>'+(q.ok?'<span class="tag" style="color:var(--ok);border-color:var(--ok)">acerto</span>':'<span class="tag f">erro</span>')+'</td><td>'+esc(q.motivo||"")+'</td>'
+      +'<td><button class="btn sm danger" data-act="delq" data-id="'+q.id+'" aria-label="Remover questão">×</button></td></tr>'}).join("")
+    +'</tbody></table></div>':'<div class="empty">Seu caderno está vazio. Resolva uma prova antiga e registre as questões.</div>')+'</div>';
+  return h;
+}
+function fmtT(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+var PASSOS=[1,3,7,15];
+function tick(){
+  timer.seg--;
+  var el=$("#tm");if(el)el.textContent=fmtT(timer.seg);
+  if(timer.seg<=0){
+    clearInterval(timer.id);timer.rodando=false;timer.seg=25*60;
+    var d=hoje();S.estudoMin[d]=(S.estudoMin[d]||0)+25;S.sessoes++;
+    ganhar(30,15,"Sessão de 25 min");salvar();render();
+  }
+}
+
+/* ====== ABA: PROGRESSO ====== */
+function viewStats(){
+  var dias=[],mx=1;
+  for(var i=13;i>=0;i--){var d=addDias(hoje(),-i),f=S.feitos[d]||[],xp=0;
+    f.forEach(function(id){var m=S.metas.filter(function(x){return x.id===id})[0];if(m)xp+=m.xp});
+    dias.push({d:d,n:f.length,xp:xp});mx=Math.max(mx,xp)}
+  var bars=dias.map(function(x){return '<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="height:110px;display:flex;align-items:flex-end;width:100%"><div title="'+fmt(x.d)+': '+x.xp+' XP" style="width:100%;height:'+Math.max(2,Math.round(x.xp/mx*100))+'%;background:linear-gradient(0deg,var(--line),var(--accent));box-shadow:0 0 8px var(--glow)"></div></div><span class="mono" style="font-size:10px;color:var(--muted)">'+x.d.slice(8)+'</span></div>'}).join("");
+  var L=nivel(S.xp);
+  var tp=0;Object.keys(S.leituraLog).forEach(function(k){tp+=S.leituraLog[k]});
+  var tm=0;Object.keys(S.estudoMin).forEach(function(k){tm+=S.estudoMin[k]});
+  return '<div class="win"><div class="win-t">XP nas Metas · últimos 14 dias<span class="sp"></span></div><div style="display:flex;gap:4px;align-items:flex-end">'+bars+'</div></div>'
+   +'<div class="grid2"><div class="win"><div class="win-t">Registro<span class="sp"></span></div>'
+   +linha("Nível",L.n+" · "+rankDe(L.n))+linha("XP total",S.xp)+linha("Páginas lidas",tp)+linha("Capítulos da Bíblia",capsLidos())+linha("Minutos de estudo",tm)+linha("Questões registradas",S.caderno.length)+linha("Recompensas resgatadas",S.recompensas.reduce(function(s,r){return s+r.resgatadas},0))+'</div>'
+   +'<div class="win"><div class="win-t">Perfil<span class="sp"></span></div><form id="f-nome"><label>Nome do jogador<input id="n-n" maxlength="24" value="'+esc(S.nome)+'"></label><div class="row" style="margin-top:10px"><button class="btn pri fit" type="submit">Salvar nome</button></div></form>'
+   +'<div style="margin-top:14px"><div class="note" style="margin-bottom:6px">Regras de nível</div><div class="note">XP para o próximo nível: 100 × nível<sup>1,5</sup>. Rank E até o nível 9, D a partir do 10, C do 20, B do 35, A do 50, S do 75 e Monarca no 100.</div></div>'
+   +'<div style="margin-top:14px"><button class="btn danger sm" id="reset">Apagar todo o progresso</button><div id="reset-c" hidden style="margin-top:8px"><span class="note">Isso não pode ser desfeito.</span> <button class="btn danger sm" data-act="resetok">Confirmar</button> <button class="btn sm" data-act="resetno">Cancelar</button></div></div></div></div>';
+}
+function linha(k,v){return '<div class="reward"><span class="muted">'+k+'</span><span class="mono">'+v+'</span></div>'}
+
+/* ====== RENDER GERAL ====== */
+function render(){
+  renderStatus();renderTabs();
+  var v=$("#view");
+  var fn={hoje:viewHoje,recomp:viewRecomp,leitura:viewLeitura,biblia:viewBiblia,estudo:viewEstudo,stats:viewStats}[aba];
+  var foco=document.activeElement&&document.activeElement.id;
+  v.innerHTML='<div style="display:flex;flex-direction:column;gap:14px">'+fn()+'</div>';
+  if(foco){var el=document.getElementById(foco);if(el&&el.focus)try{el.focus()}catch(e){}}
+}
+
+/* ====== EVENTOS ====== */
+document.addEventListener("click",function(e){
+  var t=e.target.closest("[data-aba],[data-act],#reset");if(!t)return;
+  if(t.dataset.aba){aba=t.dataset.aba;render();return}
+  if(t.id==="reset"){$("#reset-c").hidden=false;return}
+  var a=t.dataset.act,id=t.dataset.id;
+  if(a==="toggle")toggleMeta(id);
+  else if(a==="delmeta"){S.metas=S.metas.filter(function(m){return m.id!==id});salvar();render()}
+  else if(a==="sug"){var s=SUGESTOES[+t.dataset.i];S.metas.push({id:uid(),t:s.t,a:s.a,xp:25,rec:true});salvar();render()}
+  else if(a==="resgatar"){var r=S.recompensas.filter(function(x){return x.id===id})[0];if(r&&S.moedas>=r.custo){S.moedas-=r.custo;r.resgatadas++;salvar();render();toast("[ RECOMPENSA ] "+r.n)}}
+  else if(a==="delrec"){S.recompensas=S.recompensas.filter(function(x){return x.id!==id});salvar();render()}
+  else if(a==="dellivro"){S.livros=S.livros.filter(function(x){return x.id!==id});salvar();render()}
+  else if(a==="livro"){bSel=(bSel===+t.dataset.b)?-1:+t.dataset.b;render()}
+  else if(a==="cap")marcarCap(+t.dataset.b,+t.dataset.c);
+  else if(a==="lido")marcarCap(+t.dataset.b,+t.dataset.c,true);
+  else if(a==="tstart"){
+    if(timer.rodando){clearInterval(timer.id);timer.rodando=false}
+    else{timer.rodando=true;timer.id=setInterval(tick,1000)}
+    render()}
+  else if(a==="treset"){clearInterval(timer.id);timer.rodando=false;timer.seg=25*60;render()}
+  else if(a==="revisar"){
+    var q=S.caderno.filter(function(x){return x.id===id})[0];
+    if(q){q.passo=(q.passo||0)+1;
+      if(q.passo>=PASSOS.length){q.rev=false;q.prox=null}else q.prox=addDias(hoje(),PASSOS[q.passo]);
+      ganhar(10,5,"Revisão feita");salvar();render()}}
+  else if(a==="delq"){S.caderno=S.caderno.filter(function(x){return x.id!==id});salvar();render()}
+  else if(a==="resetok"){S=novoEstado();bSel=-1;salvar();render();toast("Progresso apagado")}
+  else if(a==="resetno"){$("#reset-c").hidden=true}
+});
+function provaUrl(ex,an){return "https://www.google.com/search?q="+encodeURIComponent("prova "+ex+" "+an+" caderno de questões gabarito pdf")}
+function atualizaProva(){var a=$("#p-go"),ex=$("#p-ex"),an=$("#p-an");if(a&&ex&&an)a.href=provaUrl(ex.value,an.value)}
+document.addEventListener("input",function(e){if(e.target.id==="p-ex"||e.target.id==="p-an")atualizaProva()});
+document.addEventListener("change",function(e){if(e.target.id==="p-ex"||e.target.id==="p-an")atualizaProva()});
+document.addEventListener("submit",function(e){
+  e.preventDefault();var f=e.target.id;
+  if(f==="f-meta"){
+    var t=$("#m-t").value.trim();if(!t)return;
+    var m={id:uid(),t:t,a:$("#m-a").value,xp:+$("#m-x").value,rec:$("#m-r").value==="1"};
+    if(!m.rec)m.criada=hoje();
+    S.metas.push(m);salvar();render();
+  }else if(f==="f-rec"){
+    S.recompensas.push({id:uid(),n:$("#r-n").value.trim(),custo:Math.max(1,+$("#r-c").value||1),resgatadas:0});salvar();render();
+  }else if(f==="f-livro"){
+    S.livros.push({id:uid(),t:$("#l-t").value.trim(),pag:+$("#l-p").value,lidas:0,meta:+$("#l-m").value});salvar();render();
+  }else if(e.target.classList.contains("f-pag")){
+    var b=S.livros.filter(function(x){return x.id===e.target.dataset.id})[0];
+    var n=Math.max(1,+e.target.querySelector("input").value||0);
+    if(b){n=Math.min(n,Math.max(0,b.pag-b.lidas));if(n<1){toast("Livro já concluído");return}
+      b.lidas+=n;var d=hoje();S.leituraLog[d]=(S.leituraLog[d]||0)+n;
+      ganhar(n*2,n,n+" páginas");
+      if(b.lidas>=b.pag)ganhar(100,50,"Livro concluído: "+b.t);
+      salvar();render()}
+  }else if(f==="f-diario"){
+    S.diario.push({d:hoje(),ref:$("#d-r").value.trim(),t:$("#d-t").value.trim()});ganhar(10,5,"Diário espiritual");salvar();render();
+  }else if(f==="f-q"){
+    var ok=$("#q-ok").value==="1";
+    var q={id:uid(),d:hoje(),exame:$("#q-ex").value,ano:+$("#q-an").value,mat:$("#q-mat").value,tema:$("#q-tema").value.trim(),ok:ok,motivo:ok?"":$("#q-m").value.trim(),rev:!ok,passo:0,prox:ok?null:addDias(hoje(),PASSOS[0])};
+    S.caderno.push(q);ganhar(5,3,"Questão registrada");salvar();render();
+  }else if(f==="f-nome"){
+    S.nome=$("#n-n").value.trim()||"Caçador";salvar();render();toast("Nome atualizado")
+  }
+});
+
+limparMetasAntigas();
+iniciarDados();
+})();
+</script>
+
+</body></html>
